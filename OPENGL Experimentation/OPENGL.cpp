@@ -23,6 +23,11 @@ void display() {
 }
  
 /* Main function: GLUT runs as a console application starting at main()  */
+/*
+    Notes on Compilation and Linking/Assembly
+    Compilation command: g++ -O0 -g3 -Wall -c -fmessage-length=0 -o OPENGL.o "OPENGL.cpp"
+    Linking/Assembly Command: g++ -o OPENGL.exe OPENGL.o -lglu32 -lopengl32 -lfreeglut
+*/
 int main(int argc, char** argv) {
    glutInit(&argc, argv);                 // Initialize GLUT
    glutCreateWindow("OpenGL Setup Test"); // Create a window with the given title
