@@ -1,6 +1,6 @@
 #This is the makefile for this experimentation section of the OPENGL project.
 #Makefile template used from CS70 Assignment Template
-TARGETS = OPENGL.exe Triangle.exe
+TARGETS = OPENGL.exe Triangle.exe ExampleOPENGL.exe
 
 #Flags
 OPTFLAGS = 
@@ -33,6 +33,9 @@ OPENGL.exe: OPENGL.o
 Triangle.exe: Triangle.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+ExampleOPENGL.exe: ExampleOPENGL.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 
 
 #
@@ -50,6 +53,9 @@ OPENGL.o: OPENGL.cpp
 
 Triangle.o: Triangle.cpp
 	$(CXX) $(CXXFLAGS) -o Triangle.o "Triangle.cpp"
+
+ExampleOPENGL.o: ExampleOPENGL.cpp
+	$(CXX) $(CXXFLAGS) -o ExampleOPENGL.o "ExampleOPENGL.cpp"
 
 
 #rule to clean everything (Needs to be fixed)

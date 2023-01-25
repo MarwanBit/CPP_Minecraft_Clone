@@ -1,3 +1,6 @@
+// Code COPIED FROM OPENGL TUTORIAL (CHANGED SLIGHTLY FOR PROOF OF CONCEPT)
+
+
 /*
  * GL01Hello.cpp: Test OpenGL C/C++ Setup
  */
