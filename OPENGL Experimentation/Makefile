@@ -1,6 +1,6 @@
 #This is the makefile for this experimentation section of the OPENGL project.
 #Makefile template used from CS70 Assignment Template
-TARGETS = OPENGL.exe Triangle.exe ExampleOPENGL.exe
+TARGETS = GLFWTestExample.exe
 
 #Flags
 OPTFLAGS = 
@@ -12,7 +12,7 @@ CXX = g++
 #Other Flags
 CXXFLAGS = -O0 -g3 -Wall -c -fmessage-length=0  $(DBGFLAGS) $(OPTFLAGS)
 CPPFLAGS =                  # Used for -D, -isystem and -I preprocessor options
-LDFLAGS  =  -lglu32 -lopengl32 -lfreeglut  # Used for linking-related options (-l, etc.)
+LDFLAGS  = -glfw3 -lglew32s # Used for linking-related options (-l, etc.)
 
 all: $(TARGETS)
 
@@ -36,6 +36,9 @@ Triangle.exe: Triangle.o
 ExampleOPENGL.exe: ExampleOPENGL.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+GLFWTestExample.exe: GLFWTestExample.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 
 
 #
@@ -56,6 +59,9 @@ Triangle.o: Triangle.cpp
 
 ExampleOPENGL.o: ExampleOPENGL.cpp
 	$(CXX) $(CXXFLAGS) -o ExampleOPENGL.o "ExampleOPENGL.cpp"
+	
+GLFWTestExample.o: GLFWTestExample.cpp
+	$(CXX) $(CXXFLAGS) -o  GLFWTestExample.o "GLFWTestExample.cpp"
 
 
 #rule to clean everything (Needs to be fixed)
