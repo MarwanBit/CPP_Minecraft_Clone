@@ -7,6 +7,10 @@
 #include <string>
 #include<sstream>
 
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+
 
 struct ShaderProgramSource {
     std::string VertexSource;
@@ -93,6 +97,12 @@ int main(void)
         return -1;
 
 
+    /*GLFW Version Control/ Compatibility, switch between CORE AND COMPAT*/
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
@@ -103,6 +113,7 @@ int main(void)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 
     /*Test to make sure GLFW is working correctly*/
     if (glewInit() != GLEW_OK) {
@@ -111,47 +122,90 @@ int main(void)
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-    float positions[6] = {
-        -0.5f, -0.5f,
-        0.0f,   0.5f,
-        0.5f,  -0.5f,
+    float positions[] = {
+        -0.5f, -0.5f, //0
+        0.5f,   -0.5f, //1
+        0.5f,  0.5f, //2
+        -0.5f, 0.5f, //3
     };
 
-    /*Now we are going to create a buffer for our triangle*/
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), positions, GL_STATIC_DRAW);
+    /* create an index buffer which tells you which order
+    to draw our triangles*/
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0);
-    glEnableVertexAttribArray(0);
+    /*Creates and Binds Vertex Array*/
+    unsigned int vao;
+    GLCall(glGenVertexArrays(1, &vao));
+    GLCall(glBindVertexArray(vao));
+
+    /*Now we are going to create a buffer for our triangle*/
+    VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+    GLCall(glEnableVertexAttribArray(0));
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0));
+
+    /* create the index buffer object, bind it and send to gpu*/
+    IndexBuffer ib(indices, 6);
 
     
     ShaderProgramSource source = ParseShader("res\\shaders\\Basic.shader");
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-    glUseProgram(shader);
+    GLCall(glUseProgram(shader));
+
+    /*use a uniform to send variables into shaders*/
+    GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+    ASSERT(location != -1);
+    GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
 
-    /*Time to write shaders!!! */
-    
+    /*Unbind buffers for the point of demonstration*/
+    GLCall(glBindVertexArray(0));
+    GLCall(glUseProgram(0));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+    /*Time to write shaders!!! */ 
+    float r = 0.0f;
+    float increment = 0.05f;
+
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+        GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
+        /*Bind Buffers on each call*/
+        GLCall(glUseProgram(shader));
+        GLCall(glBindVertexArray(vao));
+        ib.Bind();
+   
         /*Issue a draw call for our buffer*/
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        /*Uniforms are used per draw call, uniforms are set per draw*/
+        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+        if (r > 1.0f) {
+            increment = -0.05f;
+        }
+        else if (r < 0.0f) {
+            increment = 0.05f;
+        }
+
+        r += increment;
 
         /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+        GLCall(glfwSwapBuffers(window));
 
         /* Poll for and process events */
-        glfwPollEvents();
+        GLCall(glfwPollEvents());
     }
 
-    glDeleteProgram(shader);
+    GLCall(glDeleteProgram(shader));
     glfwTerminate();
     return 0;
 }
