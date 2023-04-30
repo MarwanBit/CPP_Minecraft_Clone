@@ -15,6 +15,13 @@
 #include "VertexArray.h"
 #include "Texture.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
+
+
 
 int main(void)
 {
@@ -32,7 +39,7 @@ int main(void)
 
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(960, 540, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -51,10 +58,10 @@ int main(void)
     std::cout << glGetString(GL_VERSION) << std::endl;
 
     float positions[] = {
-        -0.5f, -0.5f, 0.0f, 0.0f, //0
-        0.5f,   -0.5f, 1.0f, 0.0f, //1
-        0.5f,  0.5f, 1.0f, 1.0f, //2
-        -0.5f, 0.5f, 0.0f, 1.0f //3
+        -50.0f, -50.0f, 0.0f, 0.0f, //0      0,0     These are texture coordinates
+        50.0f,  -50.0f, 1.0f, 0.0f, //1      1,0
+        50.0f,  50.0f, 1.0f, 1.0f, //2       1, 1
+        -50.0f, 50.0f, 0.0f, 1.0f //3        0, 1
     };
 
     /* create an index buffer which tells you which order
@@ -63,6 +70,9 @@ int main(void)
         0, 1, 2,
         2, 3, 0
     };
+    
+    GLCall(glEnable(GL_BLEND));
+    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     
 
     /*Creates and Binds Vertex Array*/
@@ -85,6 +95,11 @@ int main(void)
     /* create the index buffer object, bind it and send to gpu*/
     IndexBuffer ib(indices, 6);
 
+    /*Here we create our projection matrix*/
+    glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);
+    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
+
+
     /*Create a shader object which we will use to handle shaders and uniforms*/
     Shader shader{ "res\\shaders\\Basic.shader" };
     shader.Bind();
@@ -105,6 +120,13 @@ int main(void)
     va.UnBind();
 
     Renderer renderer;
+    /*Create the context for ImGui which is used for creating our GUI*/
+    ImGui::CreateContext();
+    ImGui_ImplGlfwGL3_Init(window, true);
+    ImGui::StyleColorsDark();
+
+    glm::vec3 translationA(200, 200, 0);
+    glm::vec3 translationB(400, 200, 0);
 
     /*Time to write shaders!!! */ 
     float r = 0.0f;
@@ -117,15 +139,41 @@ int main(void)
         /* Render here */
         renderer.Clear();
 
+        /*Create the IMGui Frame*/
+        ImGui_ImplGlfwGL3_NewFrame();
+  
+
         /*Bind Buffers on each call*/
-        shader.Bind();
+        // shader.Bind();
         va.Bind();
         ib.Bind();
-   
-        /*Issue a draw call for our buffer*/
-        /*Uniforms are used per draw call, uniforms are set per draw*/
-        shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
-        renderer.Draw(va, ib, shader);
+
+        {
+            /*Mess with model projection matrices*/
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);
+
+            glm::mat4 mvp = proj * view * model;
+            shader.Bind();
+            /*Issue a draw call for our buffer*/
+            /*Uniforms are used per draw call, uniforms are set per draw*/
+            shader.SetUniformMat4f("u_MVP", mvp);
+            renderer.Draw(va, ib, shader);
+
+        }
+
+
+        {
+            /*Mess with model projection matrices*/
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
+
+            glm::mat4 mvp = proj * view * model;
+            /*Issue a draw call for our buffer*/
+            /*Uniforms are used per draw call, uniforms are set per draw*/
+            shader.SetUniformMat4f("u_MVP", mvp);
+            renderer.Draw(va, ib, shader);
+
+        }
+
 
         if (r > 1.0f) {
             increment = -0.05f;
@@ -136,12 +184,28 @@ int main(void)
 
         r += increment;
 
+
+        /*Define objects on our frame*/
+        {
+            ImGui::SliderFloat3("TranslationA", &translationA.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f 
+            ImGui::SliderFloat3("TranslationB", &translationB.x, 0.0f, 960.0f);
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        }
+
+        /*Render our ImGui frame*/
+        ImGui::Render();
+        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
         /* Swap front and back buffers */
         GLCall(glfwSwapBuffers(window));
 
         /* Poll for and process events */
         GLCall(glfwPollEvents());
     }
+
+    /*Shut down our ImGui frame*/
+    ImGui_ImplGlfwGL3_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
     return 0;
