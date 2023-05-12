@@ -14,6 +14,7 @@
 #include "Shader.h"
 #include "VertexArray.h"
 #include "Texture.h"
+#include "Face.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -57,12 +58,23 @@ int main(void)
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
+    /*
     float positions[] = {
-        -50.0f, -50.0f, 0.0f, 0.0f, //0      0,0     These are texture coordinates
-        50.0f,  -50.0f, 1.0f, 0.0f, //1      1,0
-        50.0f,  50.0f, 1.0f, 1.0f, //2       1, 1
-        -50.0f, 50.0f, 0.0f, 1.0f //3        0, 1
+        50.0f, 50.0f, 0.0f, 0.0f, //0      0,0     These are texture coordinates
+        150.0f,  50.0f, 1.0f, 0.0f, //1      1,0
+        150.0f,  150.0f, 1.0f, 1.0f, //2       1, 1
+        50.0f, 150.0f, 0.0f, 1.0f //3        0, 1
     };
+    */
+
+    glm::vec3 pos0{ 50.0f, 50.0f, 0.0f };
+    glm::vec3 pos1{ 150.0f, 50.0f, 0.0f };
+    glm::vec3 pos2{ 150.0f, 150.0f, 0.0f };
+    glm::vec3 pos3{ 50.0f, 150.0f, 0.0f };
+    //Now we create a face object
+    Face grassFace{ pos0, pos1, pos2, pos3, "res/textures/Grass_Block.png" };
+
+    float* positions = grassFace.getPositions();
 
     /* create an index buffer which tells you which order
     to draw our triangles*/
@@ -93,6 +105,7 @@ int main(void)
     GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0));
 
     /* create the index buffer object, bind it and send to gpu*/
+    // Change to 3 to generate entire square (having problems with generating triangles)
     IndexBuffer ib(indices, 6);
 
     /*Here we create our projection matrix*/
@@ -126,12 +139,6 @@ int main(void)
     ImGui::StyleColorsDark();
 
     glm::vec3 translationA(200, 200, 0);
-    glm::vec3 translationB(400, 200, 0);
-
-    /*Time to write shaders!!! */ 
-    float r = 0.0f;
-    float increment = 0.05f;
-
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -144,7 +151,7 @@ int main(void)
   
 
         /*Bind Buffers on each call*/
-        // shader.Bind();
+        shader.Bind();
         va.Bind();
         ib.Bind();
 
@@ -161,36 +168,13 @@ int main(void)
 
         }
 
-
-        {
-            /*Mess with model projection matrices*/
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
-
-            glm::mat4 mvp = proj * view * model;
-            /*Issue a draw call for our buffer*/
-            /*Uniforms are used per draw call, uniforms are set per draw*/
-            shader.SetUniformMat4f("u_MVP", mvp);
-            renderer.Draw(va, ib, shader);
-
-        }
-
-
-        if (r > 1.0f) {
-            increment = -0.05f;
-        }
-        else if (r < 0.0f) {
-            increment = 0.05f;
-        }
-
-        r += increment;
-
-
+       
         /*Define objects on our frame*/
         {
-            ImGui::SliderFloat3("TranslationA", &translationA.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f 
-            ImGui::SliderFloat3("TranslationB", &translationB.x, 0.0f, 960.0f);
+            ImGui::SliderFloat3("TranslationA", &(translationA.x), 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         }
+
 
         /*Render our ImGui frame*/
         ImGui::Render();
@@ -201,6 +185,8 @@ int main(void)
 
         /* Poll for and process events */
         GLCall(glfwPollEvents());
+
+        
     }
 
     /*Shut down our ImGui frame*/

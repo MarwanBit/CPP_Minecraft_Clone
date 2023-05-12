@@ -7,24 +7,35 @@ Face::Face(const glm::vec3& pos0, const glm::vec3& pos1,
 	positions_{ nullptr }, texture_{Texture(path)} {
 
 	/*Here we will construct our positions float */
-	positions_ = new float[20] {
-			pos0.x, pos0.y, pos0.z, 0.0f, 0.0f,
-			pos1.x, pos1.y, pos1.z, 1.0f, 0.0f,
-			pos2.x, pos2.y, pos2.z, 1.0f, 1.0f,
-			pos3.x, pos3.y, pos3.z, 0.0f, 1.0f,
+	positions_ = new float[16] {
+			pos0.x, pos0.y, 0.0f, 0.0f,
+			pos1.x, pos1.y, 1.0f, 0.0f,
+			pos2.x, pos2.y, 1.0f, 1.0f,
+			pos3.x, pos3.y, 0.0f, 1.0f,
 	};
-
-	//Generate the layout (so we read x,y,z vectors in position and then the texture coordinates)
-	layout_.Push<float>(3);
-	layout_.Push<float>(2);
-
-	vb_ = new VertexBuffer(positions_, 5 * 4 * sizeof(float));
-	va_.AddBuffer(*vb_, layout_);
 }
 
 
 Face::~Face() {
 	delete[] positions_;
-	delete vb_;
 }
 
+glm::vec3* Face::getPos() {
+	return &(pos_);
+}
+
+float* Face::getPositions() {
+	return positions_;
+}
+
+unsigned int* Face::getIndices() {
+	return indices_;
+}
+
+Texture Face::getTexture() {
+	return texture_;
+}
+
+void Face::updatePos(const glm::vec3& newPos) {
+	glm::vec3 pos_ = newPos;
+}
